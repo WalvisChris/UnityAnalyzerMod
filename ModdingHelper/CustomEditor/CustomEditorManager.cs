@@ -1,5 +1,7 @@
 ﻿
+using HutongGames.PlayMaker.Actions;
 using ModdingHelper.CustomEditor;
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -29,8 +31,6 @@ namespace ModdingHelper.UnityEditor
         private GameObject hierarchyContent;
         private List<GameObject> activeHierarchyNodes = new List<GameObject>();
         private GameObject rightPanelObj;
-        private EditorCard_Title nameCard;
-        private EditorCard_Transform transformCard;
         private List<GameObject> dynamicCards = new List<GameObject>();
 
         // Selection
@@ -213,12 +213,6 @@ namespace ModdingHelper.UnityEditor
             previewLayout.preferredWidth = 320;
             previewLayout.preferredHeight = 180;
             previewLayout.flexibleHeight = 0;
-
-            // 5. Create cards
-            nameCard = CreateCard_Title("NULL");
-            nameCard.Hide();
-            transformCard = CreateCard_Vector3("Transform");
-            transformCard.Hide();
         }
 
         private void RefreshSceneHierarchy()
@@ -306,10 +300,10 @@ namespace ModdingHelper.UnityEditor
             return card;
         }
 
-        private EditorCard_Transform CreateCard_Vector3(string title, Vector3? defaultPos = null, Vector3? defaultRot = null, Vector3? defaultScale = null)
+        private EditorCard_Transform CreateCard_Transform(string title, Vector3? defaultPos = null, Vector3? defaultRot = null, Vector3? defaultScale = null)
         {
             // 1. Root Card Container
-            GameObject cardObj = new GameObject("Card_Vector3");
+            GameObject cardObj = new GameObject("Card_Transform");
             cardObj.transform.SetParent(rightPanelObj.transform, false);
 
             Image bg = cardObj.AddComponent<Image>();
@@ -375,6 +369,81 @@ namespace ModdingHelper.UnityEditor
                 defaultPos ?? Vector3.zero,
                 defaultRot ?? Vector3.zero,
                 defaultScale ?? Vector3.one
+            );
+
+            return card;
+        }
+
+        private EditorCard_BoxCollider CreateCard_BoxCollider(string title, bool? isTrigger = false, bool? providesContacts = false, Vector3? defaultCenter = null, Vector3? defaultSize = null)
+        {
+            GameObject cardObj = new GameObject("Card_BoxCollider");
+            cardObj.transform.SetParent(rightPanelObj.transform, false);
+
+            Image bg = cardObj.AddComponent<Image>();
+            bg.color = new Color(0.05f, 0.05f, 0.05f);
+
+            ContentSizeFitter fitter = cardObj.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            // Vertical Layout for the card (Header + Body stacked)
+            VerticalLayoutGroup mainLayout = cardObj.AddComponent<VerticalLayoutGroup>();
+            mainLayout.padding = new RectOffset(10, 10, 10, 10);
+            mainLayout.spacing = 8;
+            mainLayout.childControlWidth = true;
+
+            LayoutElement layoutElem = cardObj.AddComponent<LayoutElement>();
+            layoutElem.preferredWidth = 330;
+            layoutElem.flexibleHeight = 0;
+
+            // 2. Title Header
+            GameObject titleObj = new GameObject("Text_Title");
+            titleObj.transform.SetParent(cardObj.transform, false);
+
+            TextMeshProUGUI titleTMP = titleObj.AddComponent<TextMeshProUGUI>();
+            titleTMP.text = title;
+            titleTMP.fontSize = 15;
+            titleTMP.fontStyle = FontStyles.Bold;
+            titleTMP.alignment = TextAlignmentOptions.Left;
+            titleTMP.color = Color.white;
+
+            // 3. Body Container (Vertical Stack for Position, Rotation, Scale)
+            GameObject bodyObj = new GameObject("Body_VerticalLayout");
+            bodyObj.transform.SetParent(cardObj.transform, false);
+
+            VerticalLayoutGroup bodyLayout = bodyObj.AddComponent<VerticalLayoutGroup>();
+            bodyLayout.spacing = 4;
+            bodyLayout.childControlWidth = true;
+
+            // Helper to generate a single line of body text
+            TextMeshProUGUI CreateVectorLine(string name)
+            {
+                GameObject lineObj = new GameObject($"Text_{name}");
+                lineObj.transform.SetParent(bodyObj.transform, false);
+
+                TextMeshProUGUI lineTMP = lineObj.AddComponent<TextMeshProUGUI>();
+                lineTMP.fontSize = 13;
+                lineTMP.color = new Color(0.6f, 0.6f, 0.6f);
+                lineTMP.alignment = TextAlignmentOptions.Left;
+
+                return lineTMP;
+            }
+
+            // Create lines for Position, Rotation, and Scale
+            TextMeshProUGUI isTriggerTMP = CreateVectorLine("IsTrigger");
+            TextMeshProUGUI providesContactsTMP = CreateVectorLine("ProvidesContacts");
+            TextMeshProUGUI centerTMP = CreateVectorLine("Center");
+            TextMeshProUGUI scaleTMP = CreateVectorLine("Scale");
+
+            // 4. Attach & Initialize Component
+            EditorCard_BoxCollider card = cardObj.AddComponent<EditorCard_BoxCollider>();
+            card.Initialize(titleTMP, isTriggerTMP, providesContactsTMP, centerTMP, scaleTMP);
+
+            // Apply default values
+            card.SetValues(
+                isTrigger ?? false,
+                providesContacts ?? false,
+                defaultCenter ?? Vector3.zero,
+                defaultSize ?? Vector3.one
             );
 
             return card;
@@ -477,16 +546,67 @@ namespace ModdingHelper.UnityEditor
             previewUIObject.SetActive(true);
             previewCamera.enabled = true;
 
-            // Cards
-            string title = $"{target.name} <#AAAAAA>({target.GetType().Name})</color>"; 
-            nameCard.SetTitle(title);
-            nameCard.Show();
-
-            transformCard.SetValues(target.position, target.eulerAngles, target.localScale);
-            transformCard.Show();
-
             // Dynamic Cards
             ClearDynamicCards();
+            CreateDynamicCards();
+        }
+
+        private void CreateDynamicCards()
+        {
+            // Always: name
+            string objectTitle = $"{selectedTransform.name} <#AAAAAA>({selectedTransform.GetType().Name})</color>";
+            EditorCard_Title nameCard = CreateCard_Title(objectTitle);
+            dynamicCards.Add(nameCard.gameObject);
+
+            // Always: layer
+            int layer = selectedTransform.gameObject.layer;
+            string layerName = LayerMask.LayerToName(layer);
+            string layerText = $"Layer: <#AAAAAA>({layer}) {layerName}</color>";
+            EditorCard_Title layerCard = CreateCard_Title(layerText);
+            dynamicCards.Add(layerCard.gameObject);
+
+            Component[] components = selectedTransform.GetComponents<Component>();
+            foreach (Component component in components)
+            {
+                if (component == null) continue;
+
+                string type = component.GetType().Name;
+
+                switch (type)
+                {
+                    case "Transform":
+                        EditorCard_Transform transformCard = CreateCard_Transform(
+                            type,
+                            selectedTransform.position,
+                            selectedTransform.eulerAngles,
+                            selectedTransform.localScale
+                        );
+                        dynamicCards.Add(transformCard.gameObject);
+                        break;
+
+                    case "BoxCollider":
+                        if (component is BoxCollider boxCollider)
+                        {
+                            EditorCard_BoxCollider boxColliderCard = CreateCard_BoxCollider(
+                                type,
+                                boxCollider.isTrigger,
+                                boxCollider.providesContacts,
+                                boxCollider.center,
+                                boxCollider.size
+                            );
+                            dynamicCards.Add(boxColliderCard.gameObject);
+                        }
+                        break;
+
+                    case "SelectionOutline":
+                        break;
+
+                    default:
+                        EditorCard_Title titleCard = CreateCard_Title(type);
+                        dynamicCards.Add(titleCard.gameObject);
+                        break;
+                }
+            }
         }
 
         private void ClearDynamicCards()
@@ -496,17 +616,6 @@ namespace ModdingHelper.UnityEditor
                 if (cardObj != null) Destroy(cardObj);
             }
             dynamicCards.Clear();
-
-            Component[] components = selectedTransform.GetComponents<Component>();
-            foreach (Component component in components)
-            {
-                string name = component.GetType().Name;
-
-                if (name == "Transform") continue;
-
-                EditorCard_Title card = CreateCard_Title(name);
-                dynamicCards.Add(card.gameObject);
-            }
         }
 
         private void Deselect()
@@ -521,8 +630,6 @@ namespace ModdingHelper.UnityEditor
 
             previewUIObject.SetActive(false);
             previewCamera.enabled = false;
-            nameCard.Hide();
-            transformCard.Hide();
             ClearDynamicCards();
         }
     }

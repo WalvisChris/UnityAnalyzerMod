@@ -11,12 +11,12 @@ namespace ModdingHelper.UnityEditor
         private TextMeshProUGUI rotationText;
         private TextMeshProUGUI scaleText;
 
-        public void Initialize(TextMeshProUGUI title, TextMeshProUGUI pos, TextMeshProUGUI rot, TextMeshProUGUI scale)
+        public void Initialize(TextMeshProUGUI titleText, TextMeshProUGUI positionText, TextMeshProUGUI rotationText, TextMeshProUGUI scaleText)
         {
-            titleText = title;
-            positionText = pos;
-            rotationText = rot;
-            scaleText = scale;
+            this.titleText = titleText;
+            this.positionText = positionText;
+            this.rotationText = rotationText;
+            this.scaleText = scaleText;
         }
 
         public void SetTitle(string newTitle) { if (titleText != null) titleText.text = newTitle;  }
@@ -30,14 +30,7 @@ namespace ModdingHelper.UnityEditor
             SetScale(scale);
         }
 
-        public void Show()
-        {
-            gameObject.SetActive(true);
-        }
-
-        public void Hide()
-        {
-            gameObject.SetActive(false);
-        }
+        public void Show() { gameObject.SetActive(true); }
+        public void Hide() { gameObject.SetActive(false); }
     }
 }
