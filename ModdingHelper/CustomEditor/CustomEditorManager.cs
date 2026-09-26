@@ -260,195 +260,6 @@ namespace ModdingHelper.UnityEditor
             return nodeObj;
         }
 
-        private EditorCard_Title CreateCard_Title(string title)
-        {
-            // Base Object
-            GameObject cardObj = new GameObject("Card_Title");
-            cardObj.transform.SetParent(rightPanelObj.transform, false);
-
-            // Background Color
-            Image bg = cardObj.AddComponent<Image>();
-            bg.color = new Color(0.05f, 0.05f, 0.05f);
-
-            // Sizing & Layout
-            ContentSizeFitter fitter = cardObj.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            VerticalLayoutGroup layout = cardObj.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(10, 10, 8, 8);
-            layout.childControlWidth = true;
-
-            LayoutElement layoutElem = cardObj.AddComponent<LayoutElement>();
-            layoutElem.preferredWidth = 330;
-            layoutElem.flexibleHeight = 0;
-
-            // Title Text
-            GameObject textObj = new GameObject("Text_Title");
-            textObj.transform.SetParent(cardObj.transform, false);
-
-            TextMeshProUGUI tmp = textObj.AddComponent<TextMeshProUGUI>();
-            tmp.text = title;
-            tmp.fontSize = 16;
-            tmp.fontStyle = FontStyles.Bold;
-            tmp.color = Color.white;
-            tmp.alignment = TextAlignmentOptions.Left;
-
-            // Attach & Initialize Component
-            EditorCard_Title card = cardObj.AddComponent<EditorCard_Title>();
-            card.Initialize(tmp);
-
-            return card;
-        }
-
-        private EditorCard_Transform CreateCard_Transform(string title, Vector3? defaultPos = null, Vector3? defaultRot = null, Vector3? defaultScale = null)
-        {
-            // 1. Root Card Container
-            GameObject cardObj = new GameObject("Card_Transform");
-            cardObj.transform.SetParent(rightPanelObj.transform, false);
-
-            Image bg = cardObj.AddComponent<Image>();
-            bg.color = new Color(0.05f, 0.05f, 0.05f);
-
-            ContentSizeFitter fitter = cardObj.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            // Vertical Layout for the card (Header + Body stacked)
-            VerticalLayoutGroup mainLayout = cardObj.AddComponent<VerticalLayoutGroup>();
-            mainLayout.padding = new RectOffset(10, 10, 10, 10);
-            mainLayout.spacing = 8;
-            mainLayout.childControlWidth = true;
-
-            LayoutElement layoutElem = cardObj.AddComponent<LayoutElement>();
-            layoutElem.preferredWidth = 330;
-            layoutElem.flexibleHeight = 0;
-
-            // 2. Title Header
-            GameObject titleObj = new GameObject("Text_Title");
-            titleObj.transform.SetParent(cardObj.transform, false);
-
-            TextMeshProUGUI titleTMP = titleObj.AddComponent<TextMeshProUGUI>();
-            titleTMP.text = title;
-            titleTMP.fontSize = 15;
-            titleTMP.fontStyle = FontStyles.Bold;
-            titleTMP.alignment = TextAlignmentOptions.Left;
-            titleTMP.color = Color.white;
-
-            // 3. Body Container (Vertical Stack for Position, Rotation, Scale)
-            GameObject bodyObj = new GameObject("Body_VerticalLayout");
-            bodyObj.transform.SetParent(cardObj.transform, false);
-
-            VerticalLayoutGroup bodyLayout = bodyObj.AddComponent<VerticalLayoutGroup>();
-            bodyLayout.spacing = 4;
-            bodyLayout.childControlWidth = true;
-
-            // Helper to generate a single line of body text
-            TextMeshProUGUI CreateVectorLine(string name)
-            {
-                GameObject lineObj = new GameObject($"Text_{name}");
-                lineObj.transform.SetParent(bodyObj.transform, false);
-
-                TextMeshProUGUI lineTMP = lineObj.AddComponent<TextMeshProUGUI>();
-                lineTMP.fontSize = 13;
-                lineTMP.color = new Color(0.6f, 0.6f, 0.6f);
-                lineTMP.alignment = TextAlignmentOptions.Left;
-
-                return lineTMP;
-            }
-
-            // Create lines for Position, Rotation, and Scale
-            TextMeshProUGUI posTMP = CreateVectorLine("Position");
-            TextMeshProUGUI rotTMP = CreateVectorLine("Rotation");
-            TextMeshProUGUI scaleTMP = CreateVectorLine("Scale");
-
-            // 4. Attach & Initialize Component
-            EditorCard_Transform card = cardObj.AddComponent<EditorCard_Transform>();
-            card.Initialize(titleTMP, posTMP, rotTMP, scaleTMP);
-
-            // Apply default values
-            card.SetValues(
-                defaultPos ?? Vector3.zero,
-                defaultRot ?? Vector3.zero,
-                defaultScale ?? Vector3.one
-            );
-
-            return card;
-        }
-
-        private EditorCard_BoxCollider CreateCard_BoxCollider(string title, bool? isTrigger = false, bool? providesContacts = false, Vector3? defaultCenter = null, Vector3? defaultSize = null)
-        {
-            GameObject cardObj = new GameObject("Card_BoxCollider");
-            cardObj.transform.SetParent(rightPanelObj.transform, false);
-
-            Image bg = cardObj.AddComponent<Image>();
-            bg.color = new Color(0.05f, 0.05f, 0.05f);
-
-            ContentSizeFitter fitter = cardObj.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            // Vertical Layout for the card (Header + Body stacked)
-            VerticalLayoutGroup mainLayout = cardObj.AddComponent<VerticalLayoutGroup>();
-            mainLayout.padding = new RectOffset(10, 10, 10, 10);
-            mainLayout.spacing = 8;
-            mainLayout.childControlWidth = true;
-
-            LayoutElement layoutElem = cardObj.AddComponent<LayoutElement>();
-            layoutElem.preferredWidth = 330;
-            layoutElem.flexibleHeight = 0;
-
-            // 2. Title Header
-            GameObject titleObj = new GameObject("Text_Title");
-            titleObj.transform.SetParent(cardObj.transform, false);
-
-            TextMeshProUGUI titleTMP = titleObj.AddComponent<TextMeshProUGUI>();
-            titleTMP.text = title;
-            titleTMP.fontSize = 15;
-            titleTMP.fontStyle = FontStyles.Bold;
-            titleTMP.alignment = TextAlignmentOptions.Left;
-            titleTMP.color = Color.white;
-
-            // 3. Body Container (Vertical Stack for Position, Rotation, Scale)
-            GameObject bodyObj = new GameObject("Body_VerticalLayout");
-            bodyObj.transform.SetParent(cardObj.transform, false);
-
-            VerticalLayoutGroup bodyLayout = bodyObj.AddComponent<VerticalLayoutGroup>();
-            bodyLayout.spacing = 4;
-            bodyLayout.childControlWidth = true;
-
-            // Helper to generate a single line of body text
-            TextMeshProUGUI CreateVectorLine(string name)
-            {
-                GameObject lineObj = new GameObject($"Text_{name}");
-                lineObj.transform.SetParent(bodyObj.transform, false);
-
-                TextMeshProUGUI lineTMP = lineObj.AddComponent<TextMeshProUGUI>();
-                lineTMP.fontSize = 13;
-                lineTMP.color = new Color(0.6f, 0.6f, 0.6f);
-                lineTMP.alignment = TextAlignmentOptions.Left;
-
-                return lineTMP;
-            }
-
-            // Create lines for Position, Rotation, and Scale
-            TextMeshProUGUI isTriggerTMP = CreateVectorLine("IsTrigger");
-            TextMeshProUGUI providesContactsTMP = CreateVectorLine("ProvidesContacts");
-            TextMeshProUGUI centerTMP = CreateVectorLine("Center");
-            TextMeshProUGUI scaleTMP = CreateVectorLine("Scale");
-
-            // 4. Attach & Initialize Component
-            EditorCard_BoxCollider card = cardObj.AddComponent<EditorCard_BoxCollider>();
-            card.Initialize(titleTMP, isTriggerTMP, providesContactsTMP, centerTMP, scaleTMP);
-
-            // Apply default values
-            card.SetValues(
-                isTrigger ?? false,
-                providesContacts ?? false,
-                defaultCenter ?? Vector3.zero,
-                defaultSize ?? Vector3.one
-            );
-
-            return card;
-        }
-
         private void Update()
         {
             if (Input.GetMouseButtonDown(1))
@@ -554,56 +365,63 @@ namespace ModdingHelper.UnityEditor
         private void CreateDynamicCards()
         {
             // Always: name
-            string objectTitle = $"{selectedTransform.name} <#AAAAAA>({selectedTransform.GetType().Name})</color>";
-            EditorCard_Title nameCard = CreateCard_Title(objectTitle);
-            dynamicCards.Add(nameCard.gameObject);
+            string objectTitle = $"{selectedTransform.gameObject.name} <#AAAAAA>({selectedTransform.gameObject.GetType().Name})</color>";
+            dynamicCards.Add(EditorCard_Title.Create(rightPanelObj.transform, objectTitle).gameObject);
 
             // Always: layer
             int layer = selectedTransform.gameObject.layer;
             string layerName = LayerMask.LayerToName(layer);
             string layerText = $"Layer: <#AAAAAA>({layer}) {layerName}</color>";
-            EditorCard_Title layerCard = CreateCard_Title(layerText);
-            dynamicCards.Add(layerCard.gameObject);
+            dynamicCards.Add(EditorCard_Title.Create(rightPanelObj.transform, layerText).gameObject);
 
             Component[] components = selectedTransform.GetComponents<Component>();
             foreach (Component component in components)
             {
                 if (component == null) continue;
 
-                string type = component.GetType().Name;
-
-                switch (type)
+                switch (component)
                 {
-                    case "Transform":
-                        EditorCard_Transform transformCard = CreateCard_Transform(
-                            type,
-                            selectedTransform.position,
-                            selectedTransform.eulerAngles,
-                            selectedTransform.localScale
-                        );
-                        dynamicCards.Add(transformCard.gameObject);
+                    case Transform t:
+                        dynamicCards.Add(EditorCard_Transform.Create(
+                            rightPanelObj.transform,
+                            "Transform",
+                            t.position,
+                            t.eulerAngles,
+                            t.localScale
+                        ).gameObject);
                         break;
 
-                    case "BoxCollider":
-                        if (component is BoxCollider boxCollider)
-                        {
-                            EditorCard_BoxCollider boxColliderCard = CreateCard_BoxCollider(
-                                type,
-                                boxCollider.isTrigger,
-                                boxCollider.providesContacts,
-                                boxCollider.center,
-                                boxCollider.size
-                            );
-                            dynamicCards.Add(boxColliderCard.gameObject);
-                        }
+                    case BoxCollider b:
+                        dynamicCards.Add(EditorCard_BoxCollider.Create(
+                            rightPanelObj.transform,
+                            "Box Collider",
+                            b.isTrigger,
+                            b.providesContacts,
+                            b.center,
+                            b.size
+                        ).gameObject);
                         break;
 
-                    case "SelectionOutline":
+                    case CapsuleCollider c:
+                        dynamicCards.Add(EditorCard_CapsuleCollider.Create(
+                            rightPanelObj.transform,
+                            "Capsule Collider",
+                            c.isTrigger,
+                            c.providesContacts,
+                            c.center,
+                            c.radius,
+                            c.height
+                            ).gameObject);
+                        break;
+
+                    case SelectionOutline s:
                         break;
 
                     default:
-                        EditorCard_Title titleCard = CreateCard_Title(type);
-                        dynamicCards.Add(titleCard.gameObject);
+                        dynamicCards.Add(EditorCard_Title.Create(
+                            rightPanelObj.transform,
+                            component.GetType().Name
+                        ).gameObject);
                         break;
                 }
             }

@@ -1,6 +1,6 @@
 {
     "name": "Unity_Analyzer",
-    "version_number": "1.0.0",
+    "version_number": "1.0.1",
     "website_url": "https://github.com/WalvisChris/UnityAnalyzerMod",
     "description": "Analyze and modify Unity Objects. Usefull for modding context.",
     "dependencies": [

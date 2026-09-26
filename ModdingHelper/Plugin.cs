@@ -8,7 +8,7 @@ namespace ModdingHelper
     {
         private const string GUID = "com.kroes.moddinghelper";
         private const string NAME = "Modding Helper";
-        private const string VERSION = "1.0.0";
+        private const string VERSION = "1.0.1";
         internal static ManualLogSource mls;
         internal static Plugin instance;
         internal static Harmony harmony = new Harmony(GUID);
