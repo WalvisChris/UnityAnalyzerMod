@@ -2,52 +2,50 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace ModdingHelper.CustomEditor
+namespace ModdingHelper.CustomEditor.EditorCards
 {
-    internal class EditorCard_CapsuleCollider : MonoBehaviour
+    internal class EditorCard_BoxCollider : MonoBehaviour
     {
         private TextMeshProUGUI titleText;
         private TextMeshProUGUI triggerText;
         private TextMeshProUGUI contactsText;
         private TextMeshProUGUI centerText;
-        private TextMeshProUGUI radiusText;
-        private TextMeshProUGUI heightText;
+        private TextMeshProUGUI sizeText;
+
         private string GetColoredBoolean(bool b) { return (b) ? $"<#00FF00>{b}</color>" : $"<#FF0000>{b}</color>"; }
-        public void Initialize(TextMeshProUGUI titleText, TextMeshProUGUI triggerText, TextMeshProUGUI contactsText, TextMeshProUGUI centerText, TextMeshProUGUI radiusText, TextMeshProUGUI heightText)
+        public void Initialize(TextMeshProUGUI titleText, TextMeshProUGUI triggerText, TextMeshProUGUI contactsText, TextMeshProUGUI centerText, TextMeshProUGUI sizeText)
         {
             this.titleText = titleText;
             this.triggerText = triggerText;
             this.contactsText = contactsText;
             this.centerText = centerText;
-            this.radiusText = radiusText;
-            this.heightText = heightText;
+            this.sizeText = sizeText;
         }
+
         public void SetTitle(string newTitle) { if (titleText != null) titleText.text = newTitle; }
         public void SetTriggerText(bool isTrigger) { if (triggerText != null) triggerText.text = $"Is Trigger: {GetColoredBoolean(isTrigger)}"; }
-        public void SetContactsText(bool providesContacts) { if (contactsText != null) contactsText.text = $"Provides Contacts: {GetColoredBoolean(providesContacts)}"; }
+        public void SetContactsText(bool providesContacts) { if (contactsText != null) contactsText.text = $"Provides Contacts: {GetColoredBoolean(providesContacts)}";  }
         public void SetCenterText(Vector3 v) { if (centerText != null) centerText.text = $"Center: {v.ToString("F2")}"; }
-        public void SetRadiusText(float f) { if (radiusText != null) radiusText.text = $"Radius: {f}"; }
-        public void SetHeightText(float f) { if (heightText != null) heightText.text = $"Height: {f}"; }
-        public void SetValues(bool isTrigger, bool providesContacts, Vector3 center, float radius, float height)
+        public void SetSizeText(Vector3 v) { if (sizeText != null) sizeText.text = $"Size: {v.ToString("F2")}"; }
+        public void SetValues(bool isTrigger, bool providesContacts, Vector3 center, Vector3 size)
         {
             SetTriggerText(isTrigger);
             SetContactsText(providesContacts);
             SetCenterText(center);
-            SetRadiusText(radius);
-            SetHeightText(height);
+            SetSizeText(size);
         }
         public void Show() { gameObject.SetActive(true); }
         public void Hide() { gameObject.SetActive(false); }
-        public static EditorCard_CapsuleCollider Create(Transform parent, string title, bool? isTrigger = false, bool? providesContacts = false, Vector3? defaultCenter = null, float? defaultRadius = null, float? defaultHeight = null)
+        public static EditorCard_BoxCollider Create(Transform parent, string title, bool? isTrigger = false, bool? providesContacts = false, Vector3? defaultCenter = null, Vector3? defaultSize = null)
         {
-            GameObject cardObj = new GameObject("Card_CapsuleCollider");
+            GameObject cardObj = new GameObject("Card_BoxCollider");
             cardObj.transform.SetParent(parent, false);
 
             Image bg = cardObj.AddComponent<Image>();
             bg.color = new Color(0.05f, 0.05f, 0.05f);
 
-            ContentSizeFitter fitter = cardObj.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            //ContentSizeFitter fitter = cardObj.AddComponent<ContentSizeFitter>();
+            //fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             // Vertical Layout for the card (Header + Body stacked)
             VerticalLayoutGroup mainLayout = cardObj.AddComponent<VerticalLayoutGroup>();
@@ -96,20 +94,18 @@ namespace ModdingHelper.CustomEditor
             TextMeshProUGUI isTriggerTMP = CreateVectorLine("IsTrigger");
             TextMeshProUGUI providesContactsTMP = CreateVectorLine("ProvidesContacts");
             TextMeshProUGUI centerTMP = CreateVectorLine("Center");
-            TextMeshProUGUI radiusTMP = CreateVectorLine("Radius");
-            TextMeshProUGUI heightTMP = CreateVectorLine("Height");
+            TextMeshProUGUI scaleTMP = CreateVectorLine("Scale");
 
             // 4. Attach & Initialize Component
-            EditorCard_CapsuleCollider card = cardObj.AddComponent<EditorCard_CapsuleCollider>();
-            card.Initialize(titleTMP, isTriggerTMP, providesContactsTMP, centerTMP, radiusTMP, heightTMP);
+            EditorCard_BoxCollider card = cardObj.AddComponent<EditorCard_BoxCollider>();
+            card.Initialize(titleTMP, isTriggerTMP, providesContactsTMP, centerTMP, scaleTMP);
 
             // Apply default values
             card.SetValues(
                 isTrigger ?? false,
                 providesContacts ?? false,
                 defaultCenter ?? Vector3.zero,
-                defaultRadius ?? 0f,
-                defaultHeight ?? 0f
+                defaultSize ?? Vector3.one
             );
 
             return card;

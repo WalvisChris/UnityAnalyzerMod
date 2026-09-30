@@ -7,7 +7,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace ModdingHelper.UnityEditor
+namespace ModdingHelper.CustomEditor.EditorCards
 {
     internal class EditorNode_Hierarchy : MonoBehaviour
     {

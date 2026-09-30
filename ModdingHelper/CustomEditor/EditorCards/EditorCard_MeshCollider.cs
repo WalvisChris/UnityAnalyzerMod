@@ -1,48 +1,41 @@
 ﻿using TMPro;
-using TMPro.Examples;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace ModdingHelper.UnityEditor
+namespace ModdingHelper.CustomEditor.EditorCards
 {
-    internal class EditorCard_Transform : MonoBehaviour
+    internal class EditorCard_MeshCollider : MonoBehaviour
     {
         private TextMeshProUGUI titleText;
-        private TextMeshProUGUI positionText;
-        private TextMeshProUGUI rotationText;
-        private TextMeshProUGUI scaleText;
-
-        public void Initialize(TextMeshProUGUI titleText, TextMeshProUGUI positionText, TextMeshProUGUI rotationText, TextMeshProUGUI scaleText)
+        private TextMeshProUGUI triggerText;
+        private TextMeshProUGUI contactsText;
+        private string GetColoredBoolean(bool b) { return (b) ? $"<#00FF00>{b}</color>" : $"<#FF0000>{b}</color>"; }
+        public void Initialize(TextMeshProUGUI titleText, TextMeshProUGUI triggerText, TextMeshProUGUI contactsText)
         {
             this.titleText = titleText;
-            this.positionText = positionText;
-            this.rotationText = rotationText;
-            this.scaleText = scaleText;
+            this.triggerText = triggerText;
+            this.contactsText = contactsText;
         }
-
-        public void SetTitle(string newTitle) { if (titleText != null) titleText.text = newTitle;  }
-        public void SetPosition(Vector3 v) { if (positionText != null) positionText.text = $"Position: {v.ToString("F2")}"; }
-        public void SetRotation(Vector3 v) { if (rotationText != null) rotationText.text = $"Rotation: {v.ToString("F2")}"; }
-        public void SetScale(Vector3 v) { if (scaleText != null) scaleText.text = $"Scale: {v.ToString("F2")}"; }
-        public void SetValues(Vector3 pos, Vector3 rot, Vector3 scale)
+        public void SetTitle(string newTitle) { if (titleText != null) titleText.text = newTitle; }
+        public void SetTriggerText(bool isTrigger) { if (triggerText != null) triggerText.text = $"Is Trigger: {GetColoredBoolean(isTrigger)}"; }
+        public void SetContactsText(bool providesContacts) { if (contactsText != null) contactsText.text = $"Provides Contacts: {GetColoredBoolean(providesContacts)}"; }
+        public void SetValues(bool isTrigger, bool providesContacts)
         {
-            SetPosition(pos);
-            SetRotation(rot);
-            SetScale(scale);
+            SetTriggerText(isTrigger);
+            SetContactsText(providesContacts);
         }
         public void Show() { gameObject.SetActive(true); }
         public void Hide() { gameObject.SetActive(false); }
-        public static EditorCard_Transform Create(Transform parent, string title, Vector3? defaultPos = null, Vector3? defaultRot = null, Vector3? defaultScale = null)
+        public static EditorCard_MeshCollider Create(Transform parent, string title, bool? isTrigger = false, bool? providesContacts = false, Vector3? defaultCenter = null, Vector3? defaultSize = null)
         {
-            // 1. Root Card Container
-            GameObject cardObj = new GameObject("Card_Transform");
+            GameObject cardObj = new GameObject("Card_MeshCollider");
             cardObj.transform.SetParent(parent, false);
 
             Image bg = cardObj.AddComponent<Image>();
             bg.color = new Color(0.05f, 0.05f, 0.05f);
 
-            ContentSizeFitter fitter = cardObj.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            //ContentSizeFitter fitter = cardObj.AddComponent<ContentSizeFitter>();
+            //fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             // Vertical Layout for the card (Header + Body stacked)
             VerticalLayoutGroup mainLayout = cardObj.AddComponent<VerticalLayoutGroup>();
@@ -88,19 +81,17 @@ namespace ModdingHelper.UnityEditor
             }
 
             // Create lines for Position, Rotation, and Scale
-            TextMeshProUGUI posTMP = CreateVectorLine("Position");
-            TextMeshProUGUI rotTMP = CreateVectorLine("Rotation");
-            TextMeshProUGUI scaleTMP = CreateVectorLine("Scale");
+            TextMeshProUGUI isTriggerTMP = CreateVectorLine("IsTrigger");
+            TextMeshProUGUI providesContactsTMP = CreateVectorLine("ProvidesContacts");
 
             // 4. Attach & Initialize Component
-            EditorCard_Transform card = cardObj.AddComponent<EditorCard_Transform>();
-            card.Initialize(titleTMP, posTMP, rotTMP, scaleTMP);
+            EditorCard_MeshCollider card = cardObj.AddComponent<EditorCard_MeshCollider>();
+            card.Initialize(titleTMP, isTriggerTMP, providesContactsTMP);
 
             // Apply default values
             card.SetValues(
-                defaultPos ?? Vector3.zero,
-                defaultRot ?? Vector3.zero,
-                defaultScale ?? Vector3.one
+                isTrigger ?? false,
+                providesContacts ?? false
             );
 
             return card;

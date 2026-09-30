@@ -1,6 +1,8 @@
 ﻿
 using HutongGames.PlayMaker.Actions;
 using ModdingHelper.CustomEditor;
+using ModdingHelper.CustomEditor.ColliderOutlines;
+using ModdingHelper.CustomEditor.EditorCards;
 using System;
 using System.Collections.Generic;
 using TMPro;
@@ -31,11 +33,12 @@ namespace ModdingHelper.UnityEditor
         private GameObject hierarchyContent;
         private List<GameObject> activeHierarchyNodes = new List<GameObject>();
         private GameObject rightPanelObj;
+        private GameObject cardContent;
         private List<GameObject> dynamicCards = new List<GameObject>();
 
         // Selection
         private Transform selectedTransform;
-        private SelectionOutline currentOutline;
+        private ColliderOutlineBase currentOutline;
 
         private void Start()
         {
@@ -84,7 +87,9 @@ namespace ModdingHelper.UnityEditor
 
             canvasObj.AddComponent<GraphicRaycaster>();
 
-            // 2a. Create the right panel
+            // -------------------------------------------------------------
+            // 2. Right Panel Setup
+            // -------------------------------------------------------------
             rightPanelObj = new GameObject("RightPanel");
             rightPanelObj.transform.SetParent(moddedCanvas.transform, false);
 
@@ -98,17 +103,80 @@ namespace ModdingHelper.UnityEditor
             rightPanelRect.anchoredPosition = new Vector2(0, 0);
             rightPanelRect.sizeDelta = new Vector2(360, 0);
 
-            // 2b. Add vertical layout to right panel
             VerticalLayoutGroup rightLayout = rightPanelObj.AddComponent<VerticalLayoutGroup>();
-            rightLayout.padding = new RectOffset(15, 15, 20, 20);
+            rightLayout.padding = new RectOffset(15, 15, 15, 15);
             rightLayout.spacing = 10;
-            rightLayout.childAlignment = TextAnchor.UpperCenter;
             rightLayout.childControlWidth = true;
-            rightLayout.childForceExpandWidth = true;
             rightLayout.childControlHeight = true;
             rightLayout.childForceExpandHeight = false;
 
-            // 3a. Create the left panel
+            // 2a. Fixed Preview Image (top of right panel)
+            previewUIObject = new GameObject("Preview_RawImage");
+            previewUIObject.transform.SetParent(rightPanelObj.transform, false);
+
+            RawImage rawImage = previewUIObject.AddComponent<RawImage>();
+            rawImage.texture = previewRenderTexture;
+
+            LayoutElement previewLayout = previewUIObject.AddComponent<LayoutElement>();
+            previewLayout.preferredWidth = 320;
+            previewLayout.preferredHeight = 180;
+            previewLayout.flexibleHeight = 0;
+
+            // 2b. Scroll View
+            GameObject rightScrollObj = new GameObject("Cards_ScrollView", typeof(RectTransform));
+            rightScrollObj.transform.SetParent(rightPanelObj.transform, false);
+
+            // Transparent raycast target so the mouse wheel works over gaps between cards
+            Image scrollBg = rightScrollObj.AddComponent<Image>();
+            scrollBg.color = new Color(0, 0, 0, 0);
+
+            ScrollRect rightScrollRect = rightScrollObj.AddComponent<ScrollRect>();
+            rightScrollRect.horizontal = false;
+            rightScrollRect.vertical = true;
+            rightScrollRect.movementType = ScrollRect.MovementType.Clamped;
+            rightScrollRect.scrollSensitivity = 30f;
+
+            LayoutElement rightScrollElem = rightScrollObj.AddComponent<LayoutElement>();
+            rightScrollElem.flexibleHeight = 1;
+
+            // 2c. Viewport
+            GameObject rightViewport = new GameObject("Viewport", typeof(RectTransform));
+            rightViewport.transform.SetParent(rightScrollObj.transform, false);
+            rightViewport.AddComponent<RectMask2D>();   // instead of Image + Mask
+
+            RectTransform rightVpRect = rightViewport.GetComponent<RectTransform>();
+            rightVpRect.anchorMin = Vector2.zero;
+            rightVpRect.anchorMax = Vector2.one;
+            rightVpRect.offsetMin = Vector2.zero;
+            rightVpRect.offsetMax = Vector2.zero;
+
+            // 2d. Content
+            cardContent = new GameObject("CardContent", typeof(RectTransform));
+            cardContent.transform.SetParent(rightViewport.transform, false);
+
+            VerticalLayoutGroup cardContentLayout = cardContent.AddComponent<VerticalLayoutGroup>();
+            cardContentLayout.spacing = 10;
+            cardContentLayout.childControlWidth = true;
+            cardContentLayout.childControlHeight = true;
+            cardContentLayout.childForceExpandWidth = true;
+            cardContentLayout.childForceExpandHeight = false;
+
+            ContentSizeFitter cardContentFitter = cardContent.AddComponent<ContentSizeFitter>();
+            cardContentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            RectTransform cardContentRect = cardContent.GetComponent<RectTransform>();
+            cardContentRect.anchorMin = new Vector2(0, 1);
+            cardContentRect.anchorMax = new Vector2(1, 1);
+            cardContentRect.pivot = new Vector2(0.5f, 1);
+            cardContentRect.anchoredPosition = Vector2.zero;
+            cardContentRect.sizeDelta = Vector2.zero;
+
+            rightScrollRect.viewport = rightVpRect;
+            rightScrollRect.content = cardContentRect;
+
+            // -------------------------------------------------------------
+            // 3. Left Panel Setup
+            // -------------------------------------------------------------
             leftPanelObj = new GameObject("LeftPanel");
             leftPanelObj.transform.SetParent(moddedCanvas.transform, false);
 
@@ -122,7 +190,6 @@ namespace ModdingHelper.UnityEditor
             leftPanelRect.anchoredPosition = new Vector2(0, 0);
             leftPanelRect.sizeDelta = new Vector2(360, 0);
 
-            // 3b. Add vertical layout to left panel
             VerticalLayoutGroup leftLayout = leftPanelObj.AddComponent<VerticalLayoutGroup>();
             leftLayout.padding = new RectOffset(10, 10, 10, 10);
             leftLayout.spacing = 10;
@@ -130,7 +197,7 @@ namespace ModdingHelper.UnityEditor
             leftLayout.childControlHeight = true;
             leftLayout.childForceExpandHeight = false;
 
-            // 3c. Refresh hierarchy button
+            // 3a. Refresh hierarchy button
             GameObject btnObj = new GameObject("Button_RefreshHierarchy");
             btnObj.transform.SetParent(leftPanelObj.transform, false);
 
@@ -153,7 +220,7 @@ namespace ModdingHelper.UnityEditor
             btnText.color = Color.white;
             btnText.alignment = TextAlignmentOptions.Center;
 
-            // 3d. Scroll view
+            // 3b. Hierarchy Scroll view
             GameObject scrollObj = new GameObject("Hierarchy_ScrollView");
             scrollObj.transform.SetParent(leftPanelObj.transform, false);
 
@@ -162,9 +229,9 @@ namespace ModdingHelper.UnityEditor
             scrollRect.vertical = true;
 
             LayoutElement scrollElem = scrollObj.AddComponent<LayoutElement>();
-            scrollElem.flexibleHeight = 1; // Fills remaining vertical space below button
+            scrollElem.flexibleHeight = 1;
 
-            // 3e. Viewport
+            // 3c. Viewport
             GameObject viewport = new GameObject("Viewport");
             viewport.transform.SetParent(scrollObj.transform, false);
 
@@ -174,13 +241,13 @@ namespace ModdingHelper.UnityEditor
             viewportMask.showMaskGraphic = true;
 
             RectTransform vpRect = viewport.GetComponent<RectTransform>();
-            vpRect.anchorMin = Vector2.zero; // Bottom-Left
-            vpRect.anchorMax = Vector2.one;  // Top-Right
+            vpRect.anchorMin = Vector2.zero;
+            vpRect.anchorMax = Vector2.one;
             vpRect.pivot = new Vector2(0.5f, 0.5f);
             vpRect.anchoredPosition = Vector2.zero;
-            vpRect.sizeDelta = Vector2.zero; // Stretches to fill ScrollView bounds
+            vpRect.sizeDelta = Vector2.zero;
 
-            // 3f. Scroll Content Container
+            // 3d. Scroll Content Container
             hierarchyContent = new GameObject("Content");
             hierarchyContent.transform.SetParent(viewport.transform, false);
 
@@ -201,20 +268,8 @@ namespace ModdingHelper.UnityEditor
 
             scrollRect.content = contentRect;
             scrollRect.viewport = vpRect;
-
-            // 4. Create the preview image
-            previewUIObject = new GameObject("Preview_RawImage");
-            previewUIObject.transform.SetParent(rightPanelObj.transform, false);
-
-            RawImage rawImage = previewUIObject.AddComponent<RawImage>();
-            rawImage.texture = previewRenderTexture;
-
-            LayoutElement previewLayout = previewUIObject.AddComponent<LayoutElement>();
-            previewLayout.preferredWidth = 320;
-            previewLayout.preferredHeight = 180;
-            previewLayout.flexibleHeight = 0;
         }
-
+        
         private void RefreshSceneHierarchy()
         {
             foreach (GameObject node in activeHierarchyNodes)
@@ -351,7 +406,20 @@ namespace ModdingHelper.UnityEditor
         {
             if (currentOutline != null) Destroy(currentOutline);
             selectedTransform = target;
-            currentOutline = target.gameObject.AddComponent<SelectionOutline>();
+
+            // Voeg het juiste specifieke outline component toe
+            if (target.TryGetComponent<BoxCollider>(out _))
+            {
+                currentOutline = target.gameObject.AddComponent<BoxColliderOutline>();
+            }
+            else if (target.TryGetComponent<CapsuleCollider>(out _))
+            {
+                currentOutline = target.gameObject.AddComponent<CapsuleColliderOutline>();
+            }
+            else if (target.TryGetComponent<MeshCollider>(out _))
+            {
+                currentOutline = target.gameObject.AddComponent<MeshColliderOutline>();
+            }
 
             // Preview
             previewUIObject.SetActive(true);
@@ -366,13 +434,15 @@ namespace ModdingHelper.UnityEditor
         {
             // Always: name
             string objectTitle = $"{selectedTransform.gameObject.name} <#AAAAAA>({selectedTransform.gameObject.GetType().Name})</color>";
-            dynamicCards.Add(EditorCard_Title.Create(rightPanelObj.transform, objectTitle).gameObject);
+            // CHANGE rightPanelObj.transform -> cardContent.transform
+            dynamicCards.Add(EditorCard_Title.Create(cardContent.transform, objectTitle).gameObject);
 
             // Always: layer
             int layer = selectedTransform.gameObject.layer;
             string layerName = LayerMask.LayerToName(layer);
             string layerText = $"Layer: <#AAAAAA>({layer}) {layerName}</color>";
-            dynamicCards.Add(EditorCard_Title.Create(rightPanelObj.transform, layerText).gameObject);
+            // CHANGE rightPanelObj.transform -> cardContent.transform
+            dynamicCards.Add(EditorCard_Title.Create(cardContent.transform, layerText).gameObject);
 
             Component[] components = selectedTransform.GetComponents<Component>();
             foreach (Component component in components)
@@ -381,9 +451,11 @@ namespace ModdingHelper.UnityEditor
 
                 switch (component)
                 {
+                    // Default Unity Components
                     case Transform t:
                         dynamicCards.Add(EditorCard_Transform.Create(
-                            rightPanelObj.transform,
+                            selectedTransform,
+                            cardContent.transform, // CHANGE HERE
                             "Transform",
                             t.position,
                             t.eulerAngles,
@@ -391,35 +463,77 @@ namespace ModdingHelper.UnityEditor
                         ).gameObject);
                         break;
 
-                    case BoxCollider b:
+                    case BoxCollider boxCollider:
                         dynamicCards.Add(EditorCard_BoxCollider.Create(
-                            rightPanelObj.transform,
+                            cardContent.transform, // CHANGE HERE
                             "Box Collider",
-                            b.isTrigger,
-                            b.providesContacts,
-                            b.center,
-                            b.size
+                            boxCollider.isTrigger,
+                            boxCollider.providesContacts,
+                            boxCollider.center,
+                            boxCollider.size
                         ).gameObject);
                         break;
 
-                    case CapsuleCollider c:
+                    case CapsuleCollider capsuleCollider:
                         dynamicCards.Add(EditorCard_CapsuleCollider.Create(
-                            rightPanelObj.transform,
+                            cardContent.transform, // CHANGE HERE
                             "Capsule Collider",
-                            c.isTrigger,
-                            c.providesContacts,
-                            c.center,
-                            c.radius,
-                            c.height
+                            capsuleCollider.isTrigger,
+                            capsuleCollider.providesContacts,
+                            capsuleCollider.center,
+                            capsuleCollider.radius,
+                            capsuleCollider.height
                             ).gameObject);
                         break;
 
-                    case SelectionOutline s:
+                    case MeshCollider meshCollider:
+                        dynamicCards.Add(EditorCard_MeshCollider.Create(
+                            cardContent.transform, // CHANGE HERE
+                            "Mesh Collider",
+                            meshCollider.isTrigger,
+                            meshCollider.providesContacts
+                        ).gameObject);
+                        break;
+
+                    case Rigidbody rigidbody:
+                        dynamicCards.Add(EditorCard_Rigidbody.Create(
+                            cardContent.transform, // CHANGE HERE
+                            "Rigidbody",
+                            rigidbody.mass,
+                            rigidbody.drag,
+                            rigidbody.angularDrag,
+                            rigidbody.automaticCenterOfMass,
+                            rigidbody.automaticInertiaTensor,
+                            rigidbody.useGravity,
+                            rigidbody.isKinematic
+                        ).gameObject);
+                        break;
+
+                    // Supermarket Together Scripts
+                    case BuildableInfo buildableInfo:
+                        dynamicCards.Add(EditorCard_Custom_BuildableInfo.Create(
+                            cardContent.transform, // CHANGE HERE
+                            "BuildableInfo",
+                            buildableInfo.decorationID,
+                            buildableInfo.cost,
+                            buildableInfo.minY,
+                            buildableInfo.maxY,
+                            buildableInfo.isCool,
+                            buildableInfo.energyCost,
+                            buildableInfo.energyWorkingHours,
+                            buildableInfo.employeeHappiness
+                        ).gameObject);
+                        break;
+
+                    // Other
+                    case BoxColliderOutline _box:
+                    case MeshColliderOutline _mesh:
+                    case CapsuleColliderOutline _capsule:
                         break;
 
                     default:
                         dynamicCards.Add(EditorCard_Title.Create(
-                            rightPanelObj.transform,
+                            cardContent.transform, // CHANGE HERE
                             component.GetType().Name
                         ).gameObject);
                         break;

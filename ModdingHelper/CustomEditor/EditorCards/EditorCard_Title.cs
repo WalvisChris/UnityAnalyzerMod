@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace ModdingHelper.UnityEditor
+namespace ModdingHelper.CustomEditor.EditorCards
 {
     internal class EditorCard_Title : MonoBehaviour
     {
@@ -21,9 +21,8 @@ namespace ModdingHelper.UnityEditor
             Image bg = cardObj.AddComponent<Image>();
             bg.color = new Color(0.05f, 0.05f, 0.05f);
 
-            // Sizing & Layout
-            ContentSizeFitter fitter = cardObj.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            //ContentSizeFitter fitter = cardObj.AddComponent<ContentSizeFitter>();
+            //fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             VerticalLayoutGroup layout = cardObj.AddComponent<VerticalLayoutGroup>();
             layout.padding = new RectOffset(10, 10, 8, 8);
