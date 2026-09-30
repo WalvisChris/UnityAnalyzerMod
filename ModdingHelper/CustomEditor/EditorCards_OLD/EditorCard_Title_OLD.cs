@@ -4,14 +4,14 @@ using UnityEngine.UI;
 
 namespace ModdingHelper.CustomEditor.EditorCards
 {
-    internal class EditorCard_Title : MonoBehaviour
+    internal class EditorCard_Title_OLD : MonoBehaviour
     {
         private TextMeshProUGUI titleText;
         public void Initialize(TextMeshProUGUI titleText) { this.titleText = titleText; }
         public void SetTitle(string newTitle) { if (titleText != null) titleText.text = newTitle; }
         public void Show() { gameObject.SetActive(true); }
         public void Hide() { gameObject.SetActive(false); }
-        public static EditorCard_Title Create(Transform parent, string title)
+        public static EditorCard_Title_OLD Create(Transform parent, string title)
         {
             // Base Object
             GameObject cardObj = new GameObject("Card_Title");
@@ -19,10 +19,7 @@ namespace ModdingHelper.CustomEditor.EditorCards
 
             // Background Color
             Image bg = cardObj.AddComponent<Image>();
-            bg.color = new Color(0.05f, 0.05f, 0.05f);
-
-            //ContentSizeFitter fitter = cardObj.AddComponent<ContentSizeFitter>();
-            //fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            bg.color = ColorThemes.cardBackgroundColor;
 
             VerticalLayoutGroup layout = cardObj.AddComponent<VerticalLayoutGroup>();
             layout.padding = new RectOffset(10, 10, 8, 8);
@@ -39,12 +36,12 @@ namespace ModdingHelper.CustomEditor.EditorCards
             TextMeshProUGUI tmp = textObj.AddComponent<TextMeshProUGUI>();
             tmp.text = title;
             tmp.fontSize = 16;
-            tmp.fontStyle = FontStyles.Bold;
-            tmp.color = Color.white;
+            //tmp.fontStyle = FontStyles.Bold;
+            tmp.color = ColorThemes.cardTitleTextColor;
             tmp.alignment = TextAlignmentOptions.Left;
 
             // Attach & Initialize Component
-            EditorCard_Title card = cardObj.AddComponent<EditorCard_Title>();
+            EditorCard_Title_OLD card = cardObj.AddComponent<EditorCard_Title_OLD>();
             card.Initialize(tmp);
 
             return card;

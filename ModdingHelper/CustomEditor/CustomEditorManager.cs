@@ -1,9 +1,6 @@
-﻿
-using HutongGames.PlayMaker.Actions;
-using ModdingHelper.CustomEditor;
+﻿using ModdingHelper.CustomEditor;
 using ModdingHelper.CustomEditor.ColliderOutlines;
 using ModdingHelper.CustomEditor.EditorCards;
-using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -35,6 +32,7 @@ namespace ModdingHelper.UnityEditor
         private GameObject rightPanelObj;
         private GameObject cardContent;
         private List<GameObject> dynamicCards = new List<GameObject>();
+        private TextMeshProUGUI versionText;
 
         // Selection
         private Transform selectedTransform;
@@ -71,6 +69,9 @@ namespace ModdingHelper.UnityEditor
             sceneCamera.enabled = true;
             isSceneCameraActive = true;
             isCursorLocked = true;
+
+            // Unity Version
+            if (versionText != null) versionText.text = $"Unity Version: {Application.unityVersion}";
         }
 
         private void CreateUI()
@@ -88,13 +89,46 @@ namespace ModdingHelper.UnityEditor
             canvasObj.AddComponent<GraphicRaycaster>();
 
             // -------------------------------------------------------------
+            // 1a. Unity Version Text
+            // -------------------------------------------------------------
+            GameObject versionObj = new GameObject("VersionBackground");
+            versionObj.transform.SetParent(moddedCanvas.transform, false);
+
+            Image versionBg = versionObj.AddComponent<Image>();
+            versionBg.color = ColorThemes.buttonColor;
+            
+            RectTransform versionRect = versionObj.GetComponent<RectTransform>();
+            versionRect.anchorMin = new Vector2(0.5f, 1f);
+            versionRect.anchorMax = new Vector2(0.5f, 1f);
+            versionRect.pivot = new Vector2(0.5f, 1f);
+            versionRect.anchoredPosition = new Vector2(0f, 0f);
+            
+            HorizontalLayoutGroup versionLayout = versionObj.AddComponent<HorizontalLayoutGroup>();
+            versionLayout.padding = new RectOffset(5, 5, 5, 5);
+            versionLayout.childControlWidth = true;
+            versionLayout.childControlHeight = true;
+            
+            ContentSizeFitter versionFitter = versionObj.AddComponent<ContentSizeFitter>();
+            versionFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            versionFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            
+            GameObject versionTextObj = new GameObject("VersionText");
+            versionTextObj.transform.SetParent(versionObj.transform, false);
+            
+            versionText = versionTextObj.AddComponent<TextMeshProUGUI>();
+            versionText.text = "Failed to find Unity version";
+            versionText.fontSize = 14;
+            versionText.alignment = TextAlignmentOptions.Center;
+            versionText.color = ColorThemes.buttonTextColor;
+
+            // -------------------------------------------------------------
             // 2. Right Panel Setup
             // -------------------------------------------------------------
             rightPanelObj = new GameObject("RightPanel");
             rightPanelObj.transform.SetParent(moddedCanvas.transform, false);
 
             Image rightPanelImage = rightPanelObj.AddComponent<Image>();
-            rightPanelImage.color = new Color(0.1f, 0.1f, 0.1f);
+            rightPanelImage.color = ColorThemes.panelColor;
 
             RectTransform rightPanelRect = rightPanelObj.GetComponent<RectTransform>();
             rightPanelRect.anchorMin = new Vector2(1, 0);
@@ -104,7 +138,7 @@ namespace ModdingHelper.UnityEditor
             rightPanelRect.sizeDelta = new Vector2(360, 0);
 
             VerticalLayoutGroup rightLayout = rightPanelObj.AddComponent<VerticalLayoutGroup>();
-            rightLayout.padding = new RectOffset(15, 15, 15, 15);
+            rightLayout.padding = new RectOffset(5, 5, 5, 5); // CHANGED
             rightLayout.spacing = 10;
             rightLayout.childControlWidth = true;
             rightLayout.childControlHeight = true;
@@ -128,7 +162,7 @@ namespace ModdingHelper.UnityEditor
 
             // Transparent raycast target so the mouse wheel works over gaps between cards
             Image scrollBg = rightScrollObj.AddComponent<Image>();
-            scrollBg.color = new Color(0, 0, 0, 0);
+            scrollBg.color = ColorThemes.transparent;
 
             ScrollRect rightScrollRect = rightScrollObj.AddComponent<ScrollRect>();
             rightScrollRect.horizontal = false;
@@ -181,7 +215,7 @@ namespace ModdingHelper.UnityEditor
             leftPanelObj.transform.SetParent(moddedCanvas.transform, false);
 
             Image leftPanelImage = leftPanelObj.AddComponent<Image>();
-            leftPanelImage.color = new Color(0.1f, 0.1f, 0.1f);
+            leftPanelImage.color = ColorThemes.panelColor;
 
             RectTransform leftPanelRect = leftPanelObj.GetComponent<RectTransform>();
             leftPanelRect.anchorMin = new Vector2(0, 0);
@@ -202,7 +236,7 @@ namespace ModdingHelper.UnityEditor
             btnObj.transform.SetParent(leftPanelObj.transform, false);
 
             Image btnImg = btnObj.AddComponent<Image>();
-            btnImg.color = new Color(0.2f, 0.2f, 0.2f);
+            btnImg.color = ColorThemes.buttonColor;
 
             Button refreshBtn = btnObj.AddComponent<Button>();
             refreshBtn.onClick.AddListener(RefreshSceneHierarchy);
@@ -216,8 +250,8 @@ namespace ModdingHelper.UnityEditor
             TextMeshProUGUI btnText = btnTextObj.AddComponent<TextMeshProUGUI>();
             btnText.text = "Refresh Hierarchy";
             btnText.fontSize = 14;
-            btnText.fontStyle = FontStyles.Bold;
-            btnText.color = Color.white;
+            //btnText.fontStyle = FontStyles.Bold;
+            btnText.color = ColorThemes.buttonTextColor;
             btnText.alignment = TextAlignmentOptions.Center;
 
             // 3b. Hierarchy Scroll view
@@ -236,7 +270,7 @@ namespace ModdingHelper.UnityEditor
             viewport.transform.SetParent(scrollObj.transform, false);
 
             Image viewportImg = viewport.AddComponent<Image>();
-            viewportImg.color = new Color(0.05f, 0.05f, 0.05f, 0.5f);
+            viewportImg.color = ColorThemes.viewportColor;
             Mask viewportMask = viewport.AddComponent<Mask>();
             viewportMask.showMaskGraphic = true;
 
@@ -314,7 +348,7 @@ namespace ModdingHelper.UnityEditor
             activeHierarchyNodes.Add(nodeObj);
             return nodeObj;
         }
-
+        
         private void Update()
         {
             if (Input.GetMouseButtonDown(1))
@@ -433,16 +467,20 @@ namespace ModdingHelper.UnityEditor
         private void CreateDynamicCards()
         {
             // Always: name
-            string objectTitle = $"{selectedTransform.gameObject.name} <#AAAAAA>({selectedTransform.gameObject.GetType().Name})</color>";
-            // CHANGE rightPanelObj.transform -> cardContent.transform
-            dynamicCards.Add(EditorCard_Title.Create(cardContent.transform, objectTitle).gameObject);
+            dynamicCards.Add(EditorCard_SingleValue.Create(
+                cardContent.transform,
+                selectedTransform.gameObject.GetType().Name,
+                selectedTransform.gameObject.name,
+                215
+            ).gameObject);
 
-            // Always: layer
+            //Always: layer
             int layer = selectedTransform.gameObject.layer;
-            string layerName = LayerMask.LayerToName(layer);
-            string layerText = $"Layer: <#AAAAAA>({layer}) {layerName}</color>";
-            // CHANGE rightPanelObj.transform -> cardContent.transform
-            dynamicCards.Add(EditorCard_Title.Create(cardContent.transform, layerText).gameObject);
+            dynamicCards.Add(EditorCard_SingleValue.Create(
+                cardContent.transform,
+                "Layer",
+                $"{LayerMask.LayerToName(layer)} ({layer})"
+            ).gameObject);
 
             Component[] components = selectedTransform.GetComponents<Component>();
             foreach (Component component in components)
@@ -454,12 +492,12 @@ namespace ModdingHelper.UnityEditor
                     // Default Unity Components
                     case Transform t:
                         dynamicCards.Add(EditorCard_Transform.Create(
-                            selectedTransform,
                             cardContent.transform, // CHANGE HERE
                             "Transform",
                             t.position,
                             t.eulerAngles,
-                            t.localScale
+                            t.localScale,
+                            selectedTransform
                         ).gameObject);
                         break;
 
@@ -532,7 +570,7 @@ namespace ModdingHelper.UnityEditor
                         break;
 
                     default:
-                        dynamicCards.Add(EditorCard_Title.Create(
+                        dynamicCards.Add(EditorCard_String.Create(
                             cardContent.transform, // CHANGE HERE
                             component.GetType().Name
                         ).gameObject);

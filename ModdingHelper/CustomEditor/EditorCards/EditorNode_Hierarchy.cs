@@ -32,7 +32,7 @@ namespace ModdingHelper.CustomEditor.EditorCards
             // Horizontal Layout for the row
             HorizontalLayoutGroup rowLayout = rowObj.AddComponent<HorizontalLayoutGroup>();
             rowLayout.spacing = 2;
-            rowLayout.childControlWidth = true;  // KEY FIX: MUST be true for preferredWidth to work
+            rowLayout.childControlWidth = true;
             rowLayout.childControlHeight = true;
             rowLayout.childForceExpandWidth = false;
             rowLayout.childForceExpandHeight = false;
@@ -82,7 +82,7 @@ namespace ModdingHelper.CustomEditor.EditorCards
             nameText = nameObj.AddComponent<TextMeshProUGUI>();
             nameText.text = target.name;
             nameText.fontSize = 13;
-            nameText.color = target.gameObject.activeInHierarchy ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+            nameText.color = target.gameObject.activeInHierarchy ? ColorThemes.cardTitleTextColor : ColorThemes.inactiveGameObjectTextColor;
             nameText.alignment = TextAlignmentOptions.Left;
 
             LayoutElement nameElem = nameObj.AddComponent<LayoutElement>();
