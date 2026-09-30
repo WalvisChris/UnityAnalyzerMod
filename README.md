@@ -8,6 +8,8 @@ The goal is to recreate as many features of the unity editor, so you can analyze
 - Load into a level to start analyzing.  
 - **Right-click** to change between the editor and ingame camera.  
 
+Unity Editor Cards are build from scripts using my own custom [Unity C# EditorCard Generator](https://walvischris.github.io/editorcards.html)  
+
 ![baler](https://raw.githubusercontent.com/WalvisChris/UnityAnalyzerMod/master/Media/editor-baler.png)  
 ![brioche](https://raw.githubusercontent.com/WalvisChris/UnityAnalyzerMod/master/Media/editor-brioche.png)  
 ![cat](https://raw.githubusercontent.com/WalvisChris/UnityAnalyzerMod/master/Media/editor-cat.png)  

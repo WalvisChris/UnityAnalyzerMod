@@ -1,6 +1,9 @@
-﻿using ModdingHelper.CustomEditor;
+﻿using HighlightPlus;
+using Mirror;
+using ModdingHelper.CustomEditor;
 using ModdingHelper.CustomEditor.ColliderOutlines;
 using ModdingHelper.CustomEditor.EditorCards;
+using StarterAssets;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -492,7 +495,7 @@ namespace ModdingHelper.UnityEditor
                     // Default Unity Components
                     case Transform t:
                         dynamicCards.Add(EditorCard_Transform.Create(
-                            cardContent.transform, // CHANGE HERE
+                            cardContent.transform,
                             "Transform",
                             t.position,
                             t.eulerAngles,
@@ -503,7 +506,7 @@ namespace ModdingHelper.UnityEditor
 
                     case BoxCollider boxCollider:
                         dynamicCards.Add(EditorCard_BoxCollider.Create(
-                            cardContent.transform, // CHANGE HERE
+                            cardContent.transform,
                             "Box Collider",
                             boxCollider.isTrigger,
                             boxCollider.providesContacts,
@@ -514,7 +517,7 @@ namespace ModdingHelper.UnityEditor
 
                     case CapsuleCollider capsuleCollider:
                         dynamicCards.Add(EditorCard_CapsuleCollider.Create(
-                            cardContent.transform, // CHANGE HERE
+                            cardContent.transform,
                             "Capsule Collider",
                             capsuleCollider.isTrigger,
                             capsuleCollider.providesContacts,
@@ -526,7 +529,7 @@ namespace ModdingHelper.UnityEditor
 
                     case MeshCollider meshCollider:
                         dynamicCards.Add(EditorCard_MeshCollider.Create(
-                            cardContent.transform, // CHANGE HERE
+                            cardContent.transform,
                             "Mesh Collider",
                             meshCollider.isTrigger,
                             meshCollider.providesContacts
@@ -535,7 +538,7 @@ namespace ModdingHelper.UnityEditor
 
                     case Rigidbody rigidbody:
                         dynamicCards.Add(EditorCard_Rigidbody.Create(
-                            cardContent.transform, // CHANGE HERE
+                            cardContent.transform,
                             "Rigidbody",
                             rigidbody.mass,
                             rigidbody.drag,
@@ -550,8 +553,8 @@ namespace ModdingHelper.UnityEditor
                     // Supermarket Together Scripts
                     case BuildableInfo buildableInfo:
                         dynamicCards.Add(EditorCard_Custom_BuildableInfo.Create(
-                            cardContent.transform, // CHANGE HERE
-                            "BuildableInfo",
+                            cardContent.transform,
+                            "BuildableInfo (Script)",
                             buildableInfo.decorationID,
                             buildableInfo.cost,
                             buildableInfo.minY,
@@ -563,15 +566,146 @@ namespace ModdingHelper.UnityEditor
                         ).gameObject);
                         break;
 
-                    // Other
+                    case PlayerObjectController playerObjectController:
+                        dynamicCards.Add(EditorCard_Custom_PlayerObjectController.Create(
+                            cardContent.transform,
+                            "PlayerObjectController (Script)",
+                            playerObjectController.ConnectionID,
+                            playerObjectController.PlayerIdNumber,
+                            playerObjectController.PlayerSteamID,
+                            playerObjectController.PlayerName,
+                            playerObjectController.PlayerSteamIDString
+                        ).gameObject);
+                        break;
+
+                    case PlayerPermissions playerPermissions:
+                        dynamicCards.Add(EditorCard_Custom_PlayerPermissions.Create(
+                            cardContent.transform,
+                            "PlayerPermissions (Script)",
+                            playerPermissions.RequestGP(),
+                            playerPermissions.RequestMP(),
+                            playerPermissions.RequestCP(),
+                            playerPermissions.RequestRP()
+                        ).gameObject);
+                        break;
+
+                    case PlayerNetwork playerNetwork:
+                        dynamicCards.Add(EditorCard_Custom_PlayerNetwork.Create(
+                            cardContent.transform,
+                            "PlayerNetwork (Script)",
+                            playerNetwork.equippedItem,
+                            playerNetwork.characterID,
+                            playerNetwork.hatID,
+                            playerNetwork.isCrouching // <- future: keep track of this since it may update
+                        ).gameObject);
+                        break;
+
+                    case InteractableContainer interactableContainer:
+                        dynamicCards.Add(EditorCard_Custom_InteractableContainer.Create(
+                            cardContent.transform,
+                            "InteractableContainer (Script)",
+                            interactableContainer.isStorageShelf,
+                            interactableContainer.isManufacturing
+                        ).gameObject);
+                        break;
+
+                    case CardboardBaler cardboardBaler:
+                        dynamicCards.Add(EditorCard_Custom_CardboardBaler.Create(
+                            cardContent.transform,
+                            "CardboardBaler (Script)",
+                            cardboardBaler.numberOfBoxesInside,
+                            cardboardBaler.isBroken,
+                            cardboardBaler.brokenDay
+                        ).gameObject);
+                        break;
+
+                    case HighlightEffect highlightEffect:
+                        int cameraLayer = highlightEffect.camerasLayerMask;
+                        int effectGroupLayer = highlightEffect.effectGroupLayer;
+                        dynamicCards.Add(EditorCard_Custom_HighlightEffect.Create(
+                            cardContent.transform,
+                            "HighlightEffect (Script)",
+                            highlightEffect.profileSync,
+                            $"{LayerMask.LayerToName(cameraLayer)} ({cameraLayer})",
+                            $"{LayerMask.LayerToName(effectGroupLayer)} ({effectGroupLayer})",
+                            highlightEffect.effectNameFilter,
+                            highlightEffect.highlighted,
+                            highlightEffect.outline,
+                            highlightEffect.outlineWidth,
+                            highlightEffect.glow,
+                            highlightEffect.glowWidth,
+                            highlightEffect.isVisible
+                        ).gameObject);
+                        break;
+
+                    case PlayerCrouch playerCrouch:
+                        dynamicCards.Add(EditorCard_String.Create(
+                            cardContent.transform,
+                            "PlayerCrouch (Script)"
+                            ).gameObject);
+                        break;
+
+                    case FirstPersonTransform firstPersonTransform:
+                        dynamicCards.Add(EditorCard_String.Create(
+                            cardContent.transform,
+                            "FirstPersonTransform (Script)"
+                            ).gameObject);
+                        break;
+
+                    // Starter Assets
+                    case FirstPersonController fpsController:
+                        int groundLayer = fpsController.GroundLayers;
+                        dynamicCards.Add(EditorCard_StarterAssets_FirstPersonController.Create(
+                            cardContent.transform,
+                            "FirstPersonController (Script)",
+                            fpsController.CrouchSpeed,
+                            fpsController.MoveSpeed,
+                            fpsController.SprintSpeed,
+                            fpsController.airSpeed,
+                            fpsController.SpeedChangeRate,
+                            fpsController.JumpHeight,
+                            fpsController.Gravity,
+                            fpsController.JumpTimeout,
+                            fpsController.FallTimeout,
+                            fpsController.Grounded,
+                            fpsController.GroundedOffset,
+                            fpsController.GroundedRadius,
+                            $"{LayerMask.LayerToName(groundLayer)} ({groundLayer})",
+                            fpsController.allowPlayerInput,
+                            fpsController.isTeleporting,
+                            fpsController.inEvent,
+                            fpsController.isBeingPushed,
+                            fpsController.inCameraEvent,
+                            fpsController.pushDirection,
+                            fpsController.alwaysRun,
+                            fpsController.inVehicle,
+                            fpsController.isIndoors,
+                            fpsController.IsCrouching
+                        ).gameObject);
+                        break;
+
+                    // Mirror Scripts
+                    case NetworkIdentity networkIdentity:
+                        dynamicCards.Add(EditorCard_Mirror_NetworkIdentity.Create(
+                            cardContent.transform,
+                            "Network Identity",
+                            networkIdentity.isServerOnly,
+                            networkIdentity.assetId,
+                            networkIdentity.netId,
+                            networkIdentity.sceneId
+                        ).gameObject);
+                        break;
+
+                    // Skip
                     case BoxColliderOutline _box:
                     case MeshColliderOutline _mesh:
                     case CapsuleColliderOutline _capsule:
                         break;
 
+                    // Default
                     default:
                         dynamicCards.Add(EditorCard_String.Create(
-                            cardContent.transform, // CHANGE HERE
+                            cardContent.transform,
                             component.GetType().Name
                         ).gameObject);
                         break;

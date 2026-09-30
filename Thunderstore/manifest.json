@@ -1,8 +1,8 @@
 {
     "name": "Unity_Analyzer",
-    "version_number": "1.0.1",
+    "version_number": "1.0.2",
     "website_url": "https://github.com/WalvisChris/UnityAnalyzerMod",
-    "description": "Analyze and modify Unity Objects. Usefull for modding context.",
+    "description": "Reverse-engineer the Unity Project. Usefull for modding.",
     "dependencies": [
         "BepInEx-BepInExPack-5.4.2305"
     ]
